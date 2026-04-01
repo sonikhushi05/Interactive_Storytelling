@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netflix Cinematic Story</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+height:100vh;
+display:flex;
+align-items:flex-end;
+justify-content:center;
+font-family:'Inter',sans-serif;
+color:white;
+overflow:hidden;
+transition:background 1s ease;
+}
+
+body::before{
+content:"";
+position:absolute;
+width:100%;
+height:100%;
+background:linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.2));
+z-index:0;
+}
+
+.container{
+position:relative;
+z-index:1;
+width:100%;
+max-width:900px;
+padding:40px;
+animation:fadeIn 1s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);} }
+
+.title{
+font-family:'Playfair Display',serif;
+font-size:34px;
+margin-bottom:15px;
+}
+
+#episode{
+font-size:14px;
+opacity:0.7;
+margin-bottom:10px;
+}
+
+#story{
+font-size:20px;
+line-height:1.7;
+margin-bottom:25px;
+min-height:100px;
+}
+
+.choices{display:flex;gap:15px;flex-wrap:wrap;}
+
+button{
+padding:12px 24px;
+border:none;
+border-radius:30px;
+background:rgba(255,255,255,0.15);
+color:white;
+cursor:pointer;
+font-size:15px;
+backdrop-filter:blur(10px);
+transition:0.3s;
+}
+
+button:hover{background:#e50914;transform:scale(1.05);} 
+
+.controls{margin-top:20px;display:flex;gap:10px;}
+.controls button{background:rgba(0,0,0,0.6);} 
+
+.music-btn{position:absolute;top:20px;right:20px;background:#e50914;border-radius:50%;padding:12px;}
+</style>
+</head>
+<body>
+
+<audio id="bgMusic" loop>
+<source src="https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a73467.mp3" type="audio/mpeg">
+</audio>
+
+<button class="music-btn" onclick="toggleMusic()">🎧</button>
+
+<div class="container">
+<div class="title">🎬 Interactive Story</div>
+<div id="episode"></div>
+<div id="story"></div>
+<div class="choices" id="choices"></div>
+
+<div class="controls">
+<button onclick="restartStory()">Restart</button>
+<button onclick="goBack()">Back</button>
+</div>
+</div>
+
+<script>
+const storyData={
+start:{ep:"Episode 1",bg:"https://images.unsplash.com/photo-1501785888041-af3ef285b470",text:"You wake in a mysterious forest.",choices:[{text:"Follow light",next:"light"},{text:"Enter darkness",next:"dark"}]},
+light:{ep:"Episode 2",bg:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",text:"You reach an abandoned village.",choices:[{text:"Enter house",next:"house"},{text:"Call out",next:"call"}]},
+house:{ep:"Final",bg:"https://images.unsplash.com/photo-1494526585095-c41746248156",text:"You find treasure. You win.",choices:[]},
+call:{ep:"Episode 3",bg:"https://images.unsplash.com/photo-1470770841072-f978cf4d019e",text:"Something answers back.",choices:[{text:"Run",next:"run"},{text:"Stay",next:"stay"}]},
+run:{ep:"Final",bg:"https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",text:"You escape safely.",choices:[]},
+stay:{ep:"Final",bg:"https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",text:"Darkness consumes you.",choices:[]},
+
+dark:{ep:"Episode 2",bg:"https://images.unsplash.com/photo-1526779259212-756e3c6c8f5b",text:"You find a cave.",choices:[{text:"Enter",next:"cave"},{text:"Back",next:"back"}]},
+cave:{ep:"Episode 3",bg:"https://images.unsplash.com/photo-1502082553048-f009c37129b9",text:"A creature awakens.",choices:[{text:"Fight",next:"fight"},{text:"Hide",next:"hide"}]},
+fight:{ep:"Final",bg:"https://images.unsplash.com/photo-1502082553048-f009c37129b9",text:"You win the battle.",choices:[]},
+hide:{ep:"Final",bg:"https://images.unsplash.com/photo-1502082553048-f009c37129b9",text:"You hide forever.",choices:[]},
+back:{ep:"Final",bg:"https://images.unsplash.com/photo-1501785888041-af3ef285b470",text:"You return safely.",choices:[]}
+};
+
+let historyStack=[];
+let musicPlaying=false;
+
+function toggleMusic(){
+const music=document.getElementById('bgMusic');
+if(!musicPlaying){music.play();musicPlaying=true;}else{music.pause();musicPlaying=false;}}
+
+function typeText(text,el){
+el.innerHTML="";
+let i=0;(function t(){if(i<text.length){el.innerHTML+=text[i++];setTimeout(t,20);}})();}
+
+function loadStory(p){
+const s=storyData[p];
+historyStack.push(p);
+localStorage.setItem('progress',p);
+
+document.body.style.background=`url(${s.bg}) center/cover no-repeat`;
+
+document.getElementById('episode').innerText=s.ep;
+typeText(s.text,document.getElementById('story'));
+
+let c=document.getElementById('choices');
+c.innerHTML="";
+s.choices.forEach(ch=>{
+let b=document.createElement('button');
+b.innerText=ch.text;
+b.onclick=()=>loadStory(ch.next);
+c.appendChild(b);
+});
+}
+
+function restartStory(){historyStack=[];localStorage.removeItem('progress');loadStory('start');}
+function goBack(){if(historyStack.length>1){historyStack.pop();loadStory(historyStack.pop());}}
+
+// Continue watching
+const saved=localStorage.getItem('progress');
+loadStory(saved || 'start');
+</script>
+
+</body>
+</html>
